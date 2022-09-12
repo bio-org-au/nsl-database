@@ -1,4 +1,4 @@
-/* common_nbame_export.sql
+/* common_name_export.sql
    -- extract from prod.apni 24 August 2022
    -- ghw
    */
