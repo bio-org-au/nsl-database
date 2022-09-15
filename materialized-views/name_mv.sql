@@ -106,7 +106,7 @@ from (
 	                                  END
 		                            END                                                      AS scientific_name_authorship,
 
-	                               n.changed_combination,
+	                               coalesce((n.base_author_id::integer)::boolean, n.changed_combination) AS changed_combination,
 	                               nt.autonym,
 	                               nt.hybrid,
 	                               nt.cultivar,
@@ -287,7 +287,7 @@ from (
 		          ON basionym_rel.cited_by_id = primary_inst.id
 
 		          LEFT JOIN shard_config mapper_host ON mapper_host.name::text = 'mapper host'::text
-		          LEFT JOIN shard_config dataset ON dataset.name::text = 'classification tree key'::text
+		          LEFT JOIN shard_config dataset ON dataset.name::text = 'name label'::text
 		          LEFT JOIN shard_config code ON code.name::text = 'nomenclatural code'::text
 	              LEFT JOIN shard_config path on path.name = 'services path name element'::text
 
