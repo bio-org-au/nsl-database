@@ -107,7 +107,7 @@ select
 	'https://id.biodiversity.org.au/name/apni/' as "apni",
 	'https://id.biodiversity.org.au/name/afd/' as "afdi",
 	'https://id.biodiversity.org.au/name/lichen/' as "alni",
-	'https://id.biodiversity.org.au/name/moss/' as "abni",
+	'https://id.biodiversity.org.au/name/ausmoss/' as "abni",
 	'https://id.biodiversity.org.au/name/algae/' as "aani",
 	'https://id.biodiversity.org.au/name/fungi/' as "afni",
     --
@@ -121,11 +121,11 @@ drop view if exists bdr_sdo_v;
 create view bdr_sdo_v
 as
 select
-	'https://www.linked.data.gov.au/org/nsl' as  "_id",
+	'https://linked.data.gov.au/org/nsl' as  "_id",
 	'sdo:Organization' as "_type",
 	'National Species List' as "sdo__name" ,
-	jsonb_build_object('@id', 'https://www.linked.data.gov.au/org/dawe' ) as "sdo__parentOrganization",
-	jsonb_build_object('@type', 'xsd:anyURI', '@value','https://biodiversity.org.au/nsl/services/') as "sdo__url",
+	jsonb_build_object('@id', 'https://linked.data.gov.au/org/abrs' ) as "sdo__parentOrganization",
+	jsonb_build_object('@type', 'xsd:anyURI', '@value','https://biodiversity.org.au/nsl') as "sdo__url",
 	tv.id as tree_version_id
 from  public.tree t
 	      join public.tree_version tv on tv.id = t.current_tree_version_id
