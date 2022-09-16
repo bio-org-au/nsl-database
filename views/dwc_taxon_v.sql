@@ -15,7 +15,10 @@ create view dwc_taxon_v
 			 "secondHybridParentNameID", "nomenclaturalCode", created, modified, "datasetName", "dataSetID", license, "ccAttributionIRI")
 AS
 SELECT
-	taxon_id, name_type, accepted_name_usage_id, accepted_name_usage, nomenclatural_status,
+	taxon_id, name_type, accepted_name_usage_id, accepted_name_usage,
+	CASE
+		WHEN nomenclatural_status !~ '(legitimate|default|available)' THEN nomenclatural_status
+	 END ,
 	nom_illeg, nom_inval,
 	taxonomic_status, pro_parte, scientific_name, scientific_name_id, canonical_name,
 	scientific_name_authorship, parent_name_usage_id, taxon_rank, taxon_rank_sort_order, kingdom,
