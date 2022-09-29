@@ -4,12 +4,12 @@
 
 drop view if exists tnu_index_v cascade;
 
-create view tnu_index_v (
+create  view tnu_index_v (
 	family, tnu_label, accepted_name_usage, dct_identifier,  taxonomic_status, accepted_name_usage_id, primary_usage_id,
     original_name_usage_id, name_according_to, tnu_publication_date, name_according_to_id,
     scientific_name_id, scientific_name, canonical_name, scientific_name_authorship, taxon_rank, name_published_in_year,
     nomenclatural_status, is_changed_combination, is_primary_usage, is_relationship, is_homotypic_usage, is_heterotypic_usage,
-    dataset_name, instance_id, name_id, reference_id, cited_by_id, cites_id, license
+    dataset_name, instance_id, name_id, reference_id, cited_by_id, cites_id, license, higher_classification
 	)
 AS
 	     SELECT
@@ -42,29 +42,38 @@ AS
 	         ref.id   AS reference_id,
 	         tnu.cited_by_id,
 	         tnu.cites_id,
-	         nv.license
+	         nv.license,
+	         higher_classification
 	     FROM   instance tnu
 	            JOIN instance_type it on it.id = tnu.instance_type_id
-	            JOIN name_mv nv on tnu.name_id = nv.name_id
+	            JOIN name_mv nv
+	                on tnu.name_id = nv.name_id
 	            JOIN reference ref
 	                JOIN author auth on ref.author_id = auth.id
 	              ON tnu.reference_id = ref.id
 	            LEFT JOIN instance txc
 	                 JOIN name_mv tn on tn.name_id = txc.name_id
-	                 LEFT JOIN taxon_mv xv on xv.name_id = txc.name_id
-	               on txc.id = tnu.cited_by_id
-	            LEFT JOIN taxon_mv tv
-	               on tnu.name_id = tv.name_id
+	             ON txc.id = tnu.cited_by_id
+
+	            LEFT JOIN ( select distinct on (canonical_name) canonical_name, higher_classification from taxon_mv  ) tv
+	                       -- on tn.canonical_name = tv.canonical_name
+	                       on coalesce(tn.canonical_name,nv.canonical_name) = tv.canonical_name
 
 		          LEFT JOIN shard_config mapper_host ON mapper_host.name::text = 'mapper host'::text
 		          LEFT JOIN shard_config dataset ON dataset.name::text = 'name label'::text
 		          LEFT JOIN shard_config code ON code.name::text = 'nomenclatural code'::text
 		          LEFT JOIN shard_config path on path.name = 'services path name element'::text
 
-ORDER BY coalesce(xv.higher_classification,tv.higher_classification),
+ORDER BY
+         higher_classification,
          coalesce(tn.scientific_name,nv.scientific_name),
          tnu_publication_date, coalesce(txc.uri, tnu.uri), it.relationship,
          nv.name_published_in_year
 ;
 
+/*
+ LEFT JOIN instance xnu
+	                JOIN instance_type xt on xt.id = xnu.instance_type_id and xt.relationship
+	             ON xnu.name_id = tnu.name_id and  xnu.id != tnu.id
+ */
 
