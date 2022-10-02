@@ -55,9 +55,9 @@ AS
 	                 JOIN name_mv tn on tn.name_id = txc.name_id
 	             ON txc.id = tnu.cited_by_id
 
-	            LEFT JOIN ( select distinct on (canonical_name) canonical_name, higher_classification from taxon_mv  ) tv
+	            LEFT JOIN ( select distinct on (canonical_name) canonical_name, scientific_name, higher_classification from taxon_mv  ) tv
 	                       -- on tn.canonical_name = tv.canonical_name
-	                       on coalesce(tn.canonical_name,nv.canonical_name) = tv.canonical_name
+	                       on coalesce(tn.scientific_name,nv.scientific_name) = tv.scientific_name
 
 		          LEFT JOIN shard_config mapper_host ON mapper_host.name::text = 'mapper host'::text
 		          LEFT JOIN shard_config dataset ON dataset.name::text = 'name label'::text
@@ -69,11 +69,53 @@ ORDER BY
          coalesce(tn.scientific_name,nv.scientific_name),
          tnu_publication_date, coalesce(txc.uri, tnu.uri), it.relationship,
          nv.name_published_in_year
+
 ;
 
-/*
- LEFT JOIN instance xnu
-	                JOIN instance_type xt on xt.id = xnu.instance_type_id and xt.relationship
-	             ON xnu.name_id = tnu.name_id and  xnu.id != tnu.id
- */
 
+
+drop FUNCTION if exists gettnu( text);
+CREATE FUNCTION gettnu(tnu_name text) RETURNS SETOF tnu_index_v AS
+$$
+	/* Returns tnu_index_v rows for names matching (and related by) POSIX expression 'tnu_name'.  */
+select *
+from (with a as (select * from tnu_index_v where scientific_name ~ tnu_name or accepted_name_usage ~ tnu_name),
+           b as (select *
+                 from tnu_index_v u
+                 where exists(
+		                 select 1 from a where u.dct_identifier = a.accepted_name_usage_id
+	                 )
+	               and scientific_name !~ tnu_name),
+           c as (select *
+                 from tnu_index_v v
+                 where exists(
+		                 select 1 from b where name_id = v.name_id
+	                 )
+	               and (accepted_name_usage !~ tnu_name or is_primary_usage)),
+           d as (select *
+                 from tnu_index_v w
+                 where exists(
+		                       select 1 from c where w.dct_identifier = c.accepted_name_usage_id
+	                       ))
+      select * from a
+      union
+      select * from b
+      union
+      select * from c
+      union
+      select * from d ) tnu
+order by higher_classification,
+         coalesce(accepted_name_usage, scientific_name),
+         tnu_publication_date, coalesce(accepted_name_usage_id, dct_identifier), is_relationship,
+         name_published_in_year;
+
+$$ LANGUAGE SQL;
+
+/*
+select * from gettnu('^Acacia')
+order by higher_classification,
+         coalesce(accepted_name_usage,scientific_name),
+         tnu_publication_date, coalesce(accepted_name_usage_id, dct_identifier), is_relationship,
+         name_published_in_year
+;
+ */
