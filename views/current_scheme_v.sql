@@ -123,7 +123,7 @@ as
 select
 	'https://linked.data.gov.au/org/nsl' as  "_id",
 	'sdo:Organization' as "_type",
-	'National Species List' as "sdo__name" ,
+	'Australian National Species List' as "sdo__name" ,
 	jsonb_build_object('@id', 'https://linked.data.gov.au/org/abrs' ) as "sdo__parentOrganization",
 	jsonb_build_object('@type', 'xsd:anyURI', '@value','https://biodiversity.org.au/nsl') as "sdo__url",
 	tv.id as tree_version_id
@@ -183,7 +183,7 @@ select
    jsonb_build_object('@type','xsd:date', '@value', tv.created_at) as "dct__created",
     json_build_object('@id', 'https://linked.data.gov.au/org/nsl') as "dct__creator",
    jsonb_build_object('@type','xsd:date', '@value', published_at) as "dct__modified",
-   json_build_object('@id', 'https://www.linked.data.gov.au/org/nsl') as "dct__publisher",
+   json_build_object('@id', 'https://linked.data.gov.au/org/nsl') as "dct__publisher",
    jsonb_build_object('@language','en', '@value', c.tree_description ) as "skos__definition",
    jsonb_build_object('@id', c.name_context||':'||te.name_id ) as "skos__hasTopConcept",
    jsonb_build_object('@language','en', '@value', c.tree_label ) as "skos__prefLabel",
