@@ -67,7 +67,7 @@ create materialized view public.name_mv
 			 name_instance_type,
 			 name_according_to_id, name_according_to, original_name_usage, original_name_usage_id,
 			 original_name_usage_year,
-			 type_citation, kingdom, family, infrageneric_epithet, generic_name, specific_epithet,
+			 type_citation, kingdom, family, uninomial, infrageneric_epithet, generic_name, specific_epithet,
 			 infraspecific_epithet, cultivar_epithet, rank_rdf_id, taxon_rank,
 			 taxon_rank_sort_order, taxon_rank_abbreviation, first_hybrid_parent_name, first_hybrid_parent_name_id,
 			 second_hybrid_parent_name,
@@ -193,7 +193,11 @@ from (
 				                                        )
 				                               )
 		                               END                                                      AS family,
-
+	                               CASE WHEN coalesce(n.simple_name,' ') !~ '\s'
+		                               and n.simple_name =  n.name_element
+		                               and  rank.sort_order <= genus.sort_order
+		                                    THEN  n.simple_name
+		                               END                                                     AS uninomial,
 	                               CASE
 		                               when pk.rdf_id = 'genus'
 			                               and rank.rdf_id <> 'species' then
