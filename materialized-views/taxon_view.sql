@@ -4,7 +4,6 @@
 /* materialized view to export shard taxonomy using the instance graph */
 /* NSL-4152: Include nomInval and nomIIeg in taxon_mv and associated objects */
 
-/*
 drop materialized view if exists taxon_view;
 create materialized view taxon_view
 			("taxonID", "nameType", "acceptedNameUsageID", "acceptedNameUsage", "nomenclaturalStatus",
@@ -283,4 +282,3 @@ comment on column taxon_view."nomenclaturalCode" is 'The nomenclatural code gove
 comment on column taxon_view.license is 'The license by which this data is being made available.';
 
 comment on column taxon_view."ccAttributionIRI" is 'The attribution to be used when citing this concept.';
-*/

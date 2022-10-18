@@ -2,7 +2,6 @@
 
 /* DEPRECATED in favour of dwc_name_v */
 
-/*
 drop materialized view if exists name_view;
 create materialized view name_view
 			( name_id,
@@ -171,4 +170,4 @@ WHERE EXISTS(SELECT 1
   -- and n.name_path !~ '^C[^P]/*'
 ORDER BY n.id, "namePublishedInYear", "originalNameUsageYear"
 ;
-*/
+
