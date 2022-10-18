@@ -11,3 +11,9 @@ GraphQL views:
  * current_scheme_v.sql
 
  * BDR-B graphQL views to produce base JSON for the JSON-LD transformation.
+
+taxon_vew and name view are added as simple views on name_mv and taxon_mv.
+
+ * Initially:
+ * name_view = dwc_name_v + name_mv.name_id
+ * taxon_view = dwc_name_view
