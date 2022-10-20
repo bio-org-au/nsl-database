@@ -41,3 +41,6 @@ FROM NAME_MV
 ;
 
 COMMENT ON VIEW NAME_VIEW is 'Based on NAME_MV, a camelCase listing of a shard''s scientific_names with "status_according_to" the current "accepted_tree", using Darwin_Core semantics where available';
+
+-- Data from this view is currently copied to Oracle (see LC-1503 for work to replace to use name_mv)
+GRANT select on name_view to public  ;

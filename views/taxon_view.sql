@@ -31,3 +31,5 @@ FROM TAXON_MV
 
 comment on view taxon_view is 'Based on TAXON_MV, a camelCase DarwinCore view of the shard''s taxonomy using the current default tree version';
 
+-- Data from this view is currently copied to Oracle (see LC-1503 for work to replace to use taxon_mv)
+GRANT select on taxon_view to public  ;
