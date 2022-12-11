@@ -260,13 +260,13 @@ create index taxon_mv_version_i on taxon_mv (tree_version_id);
 /*
  * for general use ( to list synonyms )
 */
-drop view if exists accepted_names_v;
+-- drop view if exists accepted_names_v;
 -- create view accepted_names_v as
 -- select * from taxon_mv
 -- where accepted
 -- ;
 
-drop view if exists cited_names_v;
+-- drop view if exists cited_names_v;
 -- create view cited_names_v as
 -- select * from taxon_mv
 -- where relationship
@@ -275,19 +275,19 @@ drop view if exists cited_names_v;
 /*
  * for general use ( to list synonyms )
 */
-drop view if exists homotypic_synonyms_v cascade;
+-- drop view if exists homotypic_synonyms_v cascade;
 -- create view homotypic_synonyms_v as
 -- select * from cited_names_v where homotypic;
 -- ;
-drop view if exists orthogrphic_v cascade;
+-- drop view if exists orthogrphic_v cascade;
 -- create view orthographic_v as
 -- select * from cited_names_v where homotypic and taxonomic_status ~* '(misspelling|orthographic)';
 -- ;
-drop view if exists heterotypic_synonyms_v cascade;
+-- drop view if exists heterotypic_synonyms_v cascade;
 -- create view heterotypic_synonyms_v as
 -- select * from cited_names_v where heterotypic;
 -- ;
-drop view if exists misapplied_names_v cascade;
+-- drop view if exists misapplied_names_v cascade;
 -- create view misapplied_names_v as
 -- select * from cited_names_v where misapplied;
 -- ;
