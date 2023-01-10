@@ -9,6 +9,7 @@ drop view if exists NAME_V;
 create view NAME_V
     --      column names
 	--		(
+
 	--		id, identifier, full_name, nomenclatural_status, full_name_html, simple_name, simple_name_html,
 	--		name_type, authorship, author_id, basionym_id, basionym_author_id,
 	--		primary_usage_id, primary_usage_type, primary_usage_year, rank_rdf_id, taxon_rank,
@@ -55,6 +56,7 @@ SELECT * FROM (  -- so query can use aliases
                       n.author_id                                                           AS author_id,
                       basionym.id                                                           AS basionym_id,
                       basionym.author_id                                                    AS basionym_author_id,
+
                       primary_inst.id                                                       AS primary_usage_id,
                       primary_it.rdf_id                                                     AS primary_usage_type,
                       COALESCE(substr(basionym_ref.iso_publication_date, 1, 4),
