@@ -10,7 +10,7 @@ create view NAME_V
     --      column names
 	--		(
 	--		id, identifier, full_name, nomenclatural_status, full_name_html, simple_name, simple_name_html, name_type,
-	--		authorship, basionym_id, primary_usage_id, primary_usage_type, primary_usage_year, rank_rdf_id, taxon_rank,
+	--		authorship, author_id, basionym_id, primary_usage_id, primary_usage_type, primary_usage_year, rank_rdf_id, taxon_rank,
 	--		taxon_rank_abbreviation, is_changed_combination, is_autonym, is_cultivar, is_name_formula, is_scientific,
 	--		is_nom_inval, is_nom_illeg, type_citation, kingdom, family, uninomial, infrageneric_epithet, generic_name,
 	--		specific_epithet, infraspecific_epithet, cultivar_epithet, is_hybrid, first_hybrid_parent_name, first_hybrid_parent_name_id,
@@ -50,6 +50,7 @@ SELECT * FROM (  -- so query can use aliases
 			                      END
 	                      END                                                               AS authorship,
 
+                      a.id                                                                  AS author_id,
                       basionym_inst.id                                                      AS basionym_id,
                       primary_inst.id                                                       AS primary_usage_id,
                       primary_it.rdf_id                                                     AS primary_usage_type,
