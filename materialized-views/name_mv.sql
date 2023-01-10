@@ -1,80 +1,40 @@
-/* name_mv.sql */
-/* NSL-4180 :   Create new materialised views with camel case to provide base views for NAME and TAXON */
-/* Builds name_mv and dependent views dwc_name_v and ( soon, name_view) */
+--  name_mv.sql
+--  NSL-4180 :   Create new materialised views with camel case to provide base views for NAME and TAXON
+--
+--   A snake_case listing of a shard's scientific_names with status according to the current default tree version,
+--     using Darwin_Core semantics
+--   incorporates: indexes
+--                 name_mv_name_id_i on name_mv(scientific_name_id);
+--                 name_mv_name_i on name_mv(scientific_name);
+--                 name_mv_id_i on name_mv (name_id);
+--                 name_mv_canonical_i on name_mv (canonical_name);
+--                 name_mv_family_i on name_mv (family);
+--   depends on:   function name_walk
+--   dependents:   dwc_name_view
+--                 name_view
+--                 tnu_index_v
+--          views in current_scheme_v.sql
+--                  bdr_unplaced_v
 
-
-drop function if exists name_walk(bigint, text) cascade;
-create function name_walk(nameid bigint, rank text)
-	-- nameid = name.id
-	-- rank = name_rank.rdf_id
-	-- walk up the name_part_tree to collect name_element at rank
-	returns
-		jsonb   -- at rankid
-	language plpgsql
-as
-$$
-declare
-	name_id bigint;
-	rorder integer;
-	p bigint;
-	f bigint;
-	s integer;
-	name text;
-	element text;
-	fid bigint;
-begin
-
-	-- return null;
-
-	select sort_order into f from name_rank where rdf_id = 'family';
-	select sort_order into s from name_rank where rdf_id = rank;
-
-	SELECT into p, rorder, name, element, fid parent_id, sort_order, simple_name, name_element, family_id from public.name
-		                                                                                                           join public.name_rank on name.name_rank_id = name_rank.id
-	WHERE name.id = nameid;
-
-	while  rorder > s and p is not null and s < f loop
-
-			name_id := p;
-
-			SELECT into p, rorder, name, element,  fid parent_id, sort_order, simple_name,name_element, family_id from public.name
-				                                                                                                           join public.name_rank on name.name_rank_id = name_rank.id
-			WHERE name.id = name_id;
-
-		end loop;
-
-	if s = rorder then
-		return jsonb_build_object ('id', name_id, 'name', name, 'element', element, 'family_id', fid);
-	else
-		return null;
-	end if;
-
-end;
-$$;
-
-/*
-  name_mv: 'A snake_case listing of a shard's scientific_names with status according to the current default tree version,using Darwin_Core semantics'
-  has dependents: dwc_name_view
-*/
 drop materialized view if exists public.name_mv cascade;
 create materialized view public.name_mv
-			(name_id, basionym_id,
-			 scientific_name, scientific_name_html, canonical_name, canonical_name_html, name_element,
-			 scientific_name_id, name_type,
-			 nomenclatural_status, scientific_name_authorship, changed_combination,
-			 autonym, hybrid, cultivar, formula, scientific, nom_inval, nom_illeg,
-			 name_published_in, name_published_in_id, name_published_in_year,
-			 name_instance_type,
-			 name_according_to_id, name_according_to, original_name_usage, original_name_usage_id,
-			 original_name_usage_year,
-			 type_citation, kingdom, family, uninomial, infrageneric_epithet, generic_name, specific_epithet,
-			 infraspecific_epithet, cultivar_epithet, rank_rdf_id, taxon_rank,
-			 taxon_rank_sort_order, taxon_rank_abbreviation, first_hybrid_parent_name, first_hybrid_parent_name_id,
-			 second_hybrid_parent_name,
-			 second_hybrid_parent_name_id, created, modified, nomenclatural_code, dataset_name,
-			 taxonomic_status, status_according_to,
-			 license, cc_attribution_iri
-				)   
+    --  columns
+	--	(
+	--	name_id, basionym_id, scientific_name, scientific_name_html, canonical_name,
+	--	canonical_name_html, name_element,
+	--  scientific_name_id, name_type, nomenclatural_status, scientific_name_authorship, changed_combination,
+	--  autonym, hybrid, cultivar, formula, scientific, nom_inval, nom_illeg,
+	--  name_published_in, name_published_in_id, name_published_in_year,
+	--  name_instance_type, name_according_to_id, name_according_to, original_name_usage, original_name_usage_id,
+	--	original_name_usage_year,
+	--  type_citation, kingdom, family, uninomial, infrageneric_epithet, generic_name, specific_epithet,
+	--  infraspecific_epithet, cultivar_epithet, rank_rdf_id, taxon_rank,
+	--  taxon_rank_sort_order, taxon_rank_abbreviation, first_hybrid_parent_name, first_hybrid_parent_name_id,
+	--  second_hybrid_parent_name,
+	--  second_hybrid_parent_name_id, created, modified, nomenclatural_code, dataset_name,
+	--  taxonomic_status, status_according_to,
+	--  license, cc_attribution_iri
+	--  )
 AS
 select *
 from (
@@ -138,7 +98,7 @@ from (
 	                                        basionym_ref.year::text)
 	                                                                                            AS original_name_usage_year,
 	                               CASE
-		                               WHEN nt.autonym = true THEN parent_name.full_name
+		                               WHEN nt.autonym = true and parent_name.id is not null THEN parent_name.full_name
 		                               ELSE (SELECT string_agg(regexp_replace(
 				                                                       (key1.rdf_id || ': ' || note.value)::text,
 				                                                       '[\r\n]+'::text, ' '::text, 'g'::text),
@@ -156,6 +116,7 @@ from (
 	                                                             kingdom.sort_order) find_tree_rank(name_element, rank, sort_order)),
 	                                        CASE
 		                                        WHEN code.value = 'ICN' THEN 'Plantae'
+	                                            WHEN code.value = 'ICZN' THEN 'Animalia'
 		                                        END)                                            AS kingdom,
 
 	                               CASE
@@ -284,11 +245,22 @@ from (
 		          ON primary_inst.name_id = n.id
 
 		          LEFT JOIN instance basionym_rel
-		              JOIN instance_type bt ON bt.id = basionym_rel.instance_type_id AND bt.rdf_id = 'basionym'
+		              JOIN instance_type bt ON bt.id = basionym_rel.instance_type_id AND bt.rdf_id ~ '(basionym|primary-synonym)'
 		              JOIN instance basionym_inst on basionym_rel.cites_id = basionym_inst.id
 		                 JOIN name basionym ON basionym.id = basionym_inst.name_id
 		                 JOIN reference basionym_ref ON basionym_inst.reference_id = basionym_ref.id
 		          ON basionym_rel.cited_by_id = primary_inst.id
+
+	         /*
+		          LEFT JOIN instance original_rel
+		           JOIN instance_type bt ON bt.id = original_rel.instance_type_id AND bt.rdf_id ~ 'valid-name'
+		           JOIN instance original_inst on original_rel.id = original_inst.cited_by_id
+		              JOIN instance_type ot ON bt.id = original_rel.instance_type_id AND bt.rdf_id ~ 'valid-name'
+		          JOIN name original ON original.id = original_inst.name_id
+		           JOIN reference original_ref ON original_inst.reference_id = original_ref.id
+		          ON original_rel.name_id = n.id
+
+	          */
 
 		          LEFT JOIN shard_config mapper_host ON mapper_host.name::text = 'mapper host'::text
 		          LEFT JOIN shard_config dataset ON dataset.name::text = 'name label'::text
