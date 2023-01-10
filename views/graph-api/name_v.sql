@@ -22,7 +22,7 @@ create view NAME_V
 AS
 SELECT * FROM (  -- so query can use aliases
    SELECT
-                      n.id                                                                  AS name_id,
+                      n.id                                                                  AS id,
                       ((mapper_host.value)::text || n.uri)                                  AS identifier,
                       n.full_name                                                           AS full_name,
 	                  -- [todo] nomenclatural_status voc-uri --

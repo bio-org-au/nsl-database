@@ -3,11 +3,11 @@
 --   depends on reference.citation [todo] ? where is this maintained ?
 
 
-drop view if exists qview.REFERENCE_V;
-create view qview.REFERENCE_V
+drop view if exists REFERENCE_V;
+create view REFERENCE_V
     -- column names
 	--	(
-	--	reference_id, reference_type, is_published, identifier, title, author_id, author_name, author_role,
+	--	id, reference_type, is_published, identifier, title, author_id, author_name, author_role,
 	--	citation, volume, year, edition, pages, publication_date, iso_publication_date, publisher,
 	--	published_location, uri, short_title, display_title, reference_notes, doi, isbn, issn,
 	--	parent_id, ref_author_role_id, ref_type_id, language, tl2, verbatim_author, nsl_shard
@@ -15,7 +15,7 @@ create view qview.REFERENCE_V
 as
 SELECT * FROM (
                 SELECT
-                      r.id                                                   as reference_id,
+                      r.id                                                   as id,
                       -- [todo] voc-uri
                       rt.rdf_id                                              as reference_type,
                       published                                              as is_published,

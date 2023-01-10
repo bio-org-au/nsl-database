@@ -3,15 +3,15 @@
 -- supports:  reference_v
 --            name_v
 
-drop view if exists qview.AUTHOR_V;
-create view qview.AUTHOR_V as
+drop view if exists AUTHOR_V;
+create view AUTHOR_V as
 --   columns
 --   (
---     author_id, identifier, standard_form, see_also,
+--     id, identifier, standard_form, see_also,
 --     author_name, author_full_name, nsl_shard
 --     )
 SELECT *
-FROM (SELECT a.id                                               as author_id
+FROM (SELECT a.id                                               as id
            , host.value || 'author/' || p.rdf_id || '/' || a.id as identifier
 	         --  , orcid ?
            , abbrev                                             as standard_Form
