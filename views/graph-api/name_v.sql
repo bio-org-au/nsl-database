@@ -5,14 +5,15 @@
 --      name_walk(nameid bigint, rank text) in name_walk_f.sql
 
 
-drop view if exists NAME_V;
+drop view if exists NAME_V cascade;
 create view NAME_V
     --      column names
 	--		(
-	--		id, identifier, full_name, nomenclatural_status, full_name_html, simple_name, simple_name_html,
-	--		name_type, authorship, author_id, basionym_id, basionym_author_id,
-	--		primary_usage_id, primary_usage_type, primary_usage_year, rank_rdf_id, taxon_rank,
-	--		taxon_rank_abbreviation, is_changed_combination, is_autonym, is_cultivar, is_name_formula, is_scientific,
+	--		id, identifier, name_type, rank, full_name, nomenclatural_status,
+	--		full_name_html, simple_name, simple_name_html,
+	--		authorship, reference_citation, primary_usage_year, author_id, basionym_id, basionym_author_id,
+	--		primary_usage_id, primary_usage_type, rank_rdf_id,
+	--		rank_abbreviation, is_changed_combination, is_autonym, is_cultivar, is_name_formula, is_scientific,
 	--		is_nom_inval, is_nom_illeg, type_citation, kingdom, family, uninomial,
 	--		infrageneric_epithet, generic_name, specific_epithet, infraspecific_epithet,
 	--		cultivar_epithet, is_hybrid, first_hybrid_parent_name, first_hybrid_parent_name_id,
@@ -24,6 +25,9 @@ SELECT * FROM (  -- so query can use aliases
    SELECT
                       n.id                                                                  AS id,
                       ((mapper_host.value)::text || n.uri)                                  AS identifier,
+                      nt.rdf_id                                                             AS name_type ,
+                      rank.name                                                             AS rank,
+
                       n.full_name                                                           AS full_name,
 	                  -- [todo] nomenclatural_status voc-uri --
 	                  CASE WHEN ns.rdf_id !~ 'default' THEN ns.name END                     AS nomenclatural_status,
@@ -33,7 +37,6 @@ SELECT * FROM (  -- so query can use aliases
 	                  --  [todo] experiment to see if name_element is needed --
                       --  n.name_element                                                    AS name_element,
 	                  -- [todo] name-type voc-uri --
-                      nt.rdf_id                                                             AS name_type ,
 
                       CASE ng.rdf_id
 	                      WHEN 'zoological' THEN
@@ -51,6 +54,9 @@ SELECT * FROM (  -- so query can use aliases
 					                      coalesce(coalesce(xa.abbrev || ' ex ', '') || a.abbrev, '')
 			                      END
 	                      END                                                               AS authorship,
+                      primary_ref.citation                                                  AS reference_citation,
+                      COALESCE(substr(basionym_ref.iso_publication_date, 1, 4),
+                               basionym_ref.year::text)                                     AS year,
 
                       n.author_id                                                           AS author_id,
                       basionym.id                                                           AS basionym_id,
@@ -58,12 +64,9 @@ SELECT * FROM (  -- so query can use aliases
 
                       primary_inst.id                                                       AS primary_usage_id,
                       primary_it.rdf_id                                                     AS primary_usage_type,
-                      COALESCE(substr(basionym_ref.iso_publication_date, 1, 4),
-                               basionym_ref.year::text)                                     AS primary_usage_year,
 
                       rank.rdf_id                                                           AS rank_rdf_id,
-                      rank.name                                                             AS taxon_rank,
-                      rank.abbrev                                                           AS taxon_rank_abbreviation,
+                      rank.abbrev                                                           AS rank_abbreviation,
 
                       coalesce((n.base_author_id::integer)::boolean, n.changed_combination) AS is_changed_combination,
                       nt.autonym                                                            AS is_autonym,
