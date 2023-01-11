@@ -4,19 +4,19 @@
 
 
 -- a listing of instances
-drop view if exists NAME_USAGE_V;
+drop view if exists NAME_USAGE_V CASCADE;
 create view NAME_USAGE_V
     -- columns
 	--  (
 	--  id, identifier, name_id, instance_type_id, reference_id, bhl_url, usageType,
-	--  author_id, parent_id, Name_Usage_Label, full_name, citation, iso_publication_date,
-	--  micro_Reference, verbatim_Name_String, type_citation, cited_by_id, cites_id,
+	--  author_id, parent_id, Name_Usage_Label, full_name, reference_citation, iso_publication_date,
+	--  micro_Reference, verbatim_Name_String, usage_notes, cited_by_id, cites_id,
 	--  standalone, relationship, nomenclatural, taxonomic, misapplied, nsl_shard
 	--  )
 AS SELECT *
  FROM (SELECT i.id,
               ((host.value)::text || i.uri)                                as identifier,
-              i.name_id , -- > taxonName
+              i.name_id , -- > Name
               i.instance_type_id, -- > usageType
               i.reference_id ,  -- > accordingTo,
               i.bhl_url,
@@ -28,22 +28,24 @@ AS SELECT *
               n.full_name || ' sensu. ' || a.name || ' (' || r.year || ')' as Name_Usage_Label,
               n.full_name, -- maybe not
 
-              r.citation,
+              r.citation                                                   as reference_citation,
               r.iso_publication_date,
               i.page                                                       as micro_Reference,
               i.verbatim_Name_String,
 
               (SELECT string_agg(regexp_replace(
-		                                 (key1.rdf_id || ': ' || note.value)::text,
+		                                 (key.rdf_id || ': ' || note.value)::text,
 		                                 '[\r\n]+'::text, ' '::text, 'g'::text),
-                                 '; '::text) AS string_agg
+                                 '; '::text order by key.sort_order) AS string_agg
                      FROM instance_note note
-	                    JOIN instance_note_key key1
-	                         ON key1.id = note.instance_note_key_id AND
-	                            key1.rdf_id ~* 'type$'
+	                    JOIN instance_note_key key
+	                         ON key.id = note.instance_note_key_id
+	                                -- AND key1.rdf_id ~* 'type$' /*if restricted to type*/
                       WHERE note.instance_id = i.id
+                    
               )
-                                                                           AS type_citation,
+                                                                           AS usage_notes,
+	       /*notes: [TaxonomicNameUsageNote]*/
 
               i.cited_by_id, -- > acceptedNameUsage
               i.cites_id,
@@ -56,7 +58,7 @@ AS SELECT *
 
               p.rdf_id                                                     as nsl_shard /*cast as uri*/
 
-	       /*notes: [TaxonomicNameUsageNote]*/
+
 	       /*acceptedNameUsageFor: [TaxonomicNameUsage]*/
 	       /*children: [TaxonomicNameUsage]*/
 	       /*classification: [TaxonomicNameUsage]*/
